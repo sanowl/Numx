@@ -1,0 +1,7 @@
+all: array_operations.o
+
+array_operations.o: array_operations.c array_operations.h
+	gcc -fPIC -O3 -mavx -fopenmp -c array_operations.c -o array_operations.o
+
+clean:
+	rm -f *.o
