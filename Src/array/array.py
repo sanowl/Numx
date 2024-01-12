@@ -23,34 +23,48 @@ class Array:
         else:
             raise ValueError("The operand must be an Array or a scalar")
 
-    def __add__(self, other):
+    def _apply_operation(self, other, operation):
         other = self._ensure_array_or_scalar(other)
-        return Array(self.shape, dtype=self.dtype, buffer=self.data + other)
+        result_data = operation(self.data, other)
+        return Array(result_data.shape, dtype=result_data.dtype, buffer=result_data)
+
+    def __add__(self, other):
+        return self._apply_operation(other, np.add)
 
     def __sub__(self, other):
-        other = self._ensure_array_or_scalar(other)
-        return Array(self.shape, dtype=self.dtype, buffer=self.data - other)
+        return self._apply_operation(other, np.subtract)
 
     def __mul__(self, other):
-        other = self._ensure_array_or_scalar(other)
-        return Array(self.shape, dtype=self.dtype, buffer=self.data * other)
+        return self._apply_operation(other, np.multiply)
 
     def __truediv__(self, other):
-        other = self._ensure_array_or_scalar(other)
-        return Array(self.shape, dtype=self.dtype, buffer=self.data / other)
+        return self._apply_operation(other, np.divide)
 
     def matmul(self, other):
         if not isinstance(other, Array):
             raise ValueError("Matrix multiplication is only supported with another Array")
-        if self.shape[-1] != other.shape[0]:
-            raise ValueError("Shapes are not aligned for matrix multiplication")
         result = np.matmul(self.data, other.data)
-        return Array(result.shape, dtype=self.dtype, buffer=result)
+        return Array(result.shape, dtype=result.dtype, buffer=result)
 
     def transpose(self):
         return Array(self.data.T.shape, dtype=self.dtype, buffer=self.data.T)
 
-    # Additional methods like inverse, determinant, etc., can be added here.
+    def dot(self, other):
+        result = np.dot(self.data, other.data)
+        return Array(result.shape, dtype=result.dtype, buffer=result)
+
+    def inverse(self):
+        if self.data.shape[0] != self.data.shape[1]:
+            raise ValueError("Inverse only applicable to square matrices")
+        result = np.linalg.inv(self.data)
+        return Array(result.shape, dtype=result.dtype, buffer=result)
+
+    def determinant(self):
+        if self.data.shape[0] != self.data.shape[1]:
+            raise ValueError("Determinant only applicable to square matrices")
+        return np.linalg.det(self.data)
+
+    # Additional methods like eigenvalues, eigenvectors, etc., can be added here.
 
 # Example usage
 if __name__ == "__main__":
@@ -66,5 +80,8 @@ if __name__ == "__main__":
     print("Matrix Multiplication:")
     print(arr1.matmul(arr2))
 
-    print("Transpose of Array 1:")
-    print(arr1.transpose())
+    print("Inverse of Array 1:")
+    print(arr1.inverse())
+
+    print("Determinant of Array 1:")
+    print(arr1.determinant())
