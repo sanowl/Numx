@@ -2,46 +2,55 @@ import numpy as np
 
 class Array:
     def __init__(self, shape, dtype=float, buffer=None):
-        """Initialize an Array with a given shape.
-
-        Args:
-        shape (tuple): The shape of the array.
-        dtype (type, optional): The data type of the array. Defaults to float.
-        buffer (np.ndarray, optional): A buffer to initialize the array. Defaults to None.
-        """
         self.shape = shape
         self.dtype = dtype
         self.data = np.zeros(shape, dtype=dtype) if buffer is None else np.array(buffer, dtype=dtype)
 
     def __str__(self):
-        """String representation of the array for printing."""
         return str(self.data)
 
     def __getitem__(self, index):
-        """Get an item from the array."""
         return self.data[index]
 
     def __setitem__(self, index, value):
-        """Set an item in the array."""
         self.data[index] = value
 
+    def _ensure_array_or_scalar(self, other):
+        if isinstance(other, Array):
+            return other.data
+        elif np.isscalar(other):
+            return other
+        else:
+            raise ValueError("The operand must be an Array or a scalar")
+
     def __add__(self, other):
-        """Add two arrays element-wise."""
-        return Array(self.shape, dtype=self.dtype, buffer=self.data + other.data)
+        other = self._ensure_array_or_scalar(other)
+        return Array(self.shape, dtype=self.dtype, buffer=self.data + other)
 
     def __sub__(self, other):
-        """Subtract two arrays element-wise."""
-        return Array(self.shape, dtype=self.dtype, buffer=self.data - other.data)
+        other = self._ensure_array_or_scalar(other)
+        return Array(self.shape, dtype=self.dtype, buffer=self.data - other)
 
     def __mul__(self, other):
-        """Multiply two arrays element-wise."""
-        return Array(self.shape, dtype=self.dtype, buffer=self.data * other.data)
+        other = self._ensure_array_or_scalar(other)
+        return Array(self.shape, dtype=self.dtype, buffer=self.data * other)
 
     def __truediv__(self, other):
-        """Divide two arrays element-wise."""
-        return Array(self.shape, dtype=self.dtype, buffer=self.data / other.data)
+        other = self._ensure_array_or_scalar(other)
+        return Array(self.shape, dtype=self.dtype, buffer=self.data / other)
 
-    # Advanced methods could include matrix multiplication, inverse, etc.
+    def matmul(self, other):
+        if not isinstance(other, Array):
+            raise ValueError("Matrix multiplication is only supported with another Array")
+        if self.shape[-1] != other.shape[0]:
+            raise ValueError("Shapes are not aligned for matrix multiplication")
+        result = np.matmul(self.data, other.data)
+        return Array(result.shape, dtype=self.dtype, buffer=result)
+
+    def transpose(self):
+        return Array(self.data.T.shape, dtype=self.dtype, buffer=self.data.T)
+
+    # Additional methods like inverse, determinant, etc., can be added here.
 
 # Example usage
 if __name__ == "__main__":
@@ -54,5 +63,8 @@ if __name__ == "__main__":
     print("Array 2:")
     print(arr2)
 
-    print("Added Arrays:")
-    print(arr1 + arr2)
+    print("Matrix Multiplication:")
+    print(arr1.matmul(arr2))
+
+    print("Transpose of Array 1:")
+    print(arr1.transpose())
